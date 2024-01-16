@@ -1,0 +1,94 @@
+* {
+  box-sizing: border-box;
+  padding: 0px;
+  margin: 0px;
+}
+
+:root {
+  --app-success-color: rgb(36, 128, 36);
+  --app-white-color: whitesmoke;
+  --app-btn-bg: rgb(51, 50, 50);
+  --app-danger-color: rgb(164, 31, 31);
+}
+
+body {
+  font-size: 20px;
+  font-family: "Roboto", serif;
+  padding: 1rem;
+}
+
+main {
+  width: 27%;
+  background-color: rgb(157, 124, 130);
+  padding: 1rem;
+  text-align: center;
+}
+
+label {
+  font-family: 'Chakra Petch', sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--app-danger-color);
+  margin-left: 1rem;
+}
+
+.note {
+  color: var(--app-success-color);
+  font-family: 'Chakra Petch', sans-serif;
+}
+
+.note.fail {
+  color: var(--app-danger-color);
+}
+
+p {
+  margin: 1rem 0;
+  text-align: right;
+}
+
+button,
+input {
+  outline: none;
+  border: none;
+  padding: 0.5rem;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  background: var(--app-btn-bg);
+  width: 100px;
+  color: var(--app-white-color);
+  text-transform: uppercase;
+  font-family: 'Chakra Petch', sans-serif;
+  border-radius: 0.25rem;
+}
+
+button:hover {
+  color:var(--app-success-color)
+}
+
+button:disabled {
+  opacity: .2;
+}
+
+/* КЛАССЫ */
+
+.field {
+  width: 350px;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  margin-left: auto;  
+}
+
+.field__cell {
+  width: 100%;
+  height: 35px;
+  border: 1px solid var(--app-white-color);
+}
+
+.transparent {
+  visibility: hidden;
+}
+
+.field__cell.active {
+  background: var(--app-danger-color);
+}
