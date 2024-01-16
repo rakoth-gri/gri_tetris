@@ -3,10 +3,11 @@ const $FIELD = document.querySelector(".field"),
   $PAUSE = document.querySelector(".controls__pause"),
   $RESET = document.querySelector(".controls__reset"),
   $SCORE = document.querySelector(".controls__score"),
+  $COLOR = document.querySelector(".controls__color"),
   $NOTE = document.querySelector(".note"),
   // длина ряда в клетках!
   ROW = 10,
-  KEY_LIST = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"], 
+  KEY_LIST = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"],
   // Все фигуры будут принимать 4 положения вращения по часовой!
   I_SHAPE = [
     [2, 2 + ROW, 2 + 2 * ROW, 2 + 3 * ROW],
@@ -50,9 +51,51 @@ const $FIELD = document.querySelector(".field"),
     [0 + ROW, 1, 1 + ROW, 2],
     [0, 0 + ROW, 1 + ROW, 1 + 2 * ROW],
   ],
-  FIGURES = [S_SHAPE, Z_SHAPE, T_SHAPE, O_SHAPE, L_SHAPE, J_SHAPE, I_SHAPE];
+  FIGURES = [S_SHAPE, Z_SHAPE, T_SHAPE, O_SHAPE, L_SHAPE, J_SHAPE, I_SHAPE],
+  SPEED_LIST = [
+    {
+      text: "LEVEL1",
+      value: 1000,
+    },
+    {
+      text: "LEVEL2",
+      value: 900,
+    },
+    {
+      text: "LEVEL3",
+      value: 800,
+    },
+    {
+      text: "LEVEL4",
+      value: 700,
+    },
+    {
+      text: "LEVEL5",
+      value: 600,
+    },
+    {
+      text: "LEVEL6",
+      value: 500,
+    },
+    {
+      text: "LEVEL7",
+      value: 400,
+    },
+    {
+      text: "LEVEL8",
+      value: 300,
+    },
+    {
+      text: "LEVEL9",
+      value: 200,
+    },
+    {
+      text: "LEVEL10",
+      value: 100,
+    },
+  ];
 
-export {  
+export {
   ROW,
   KEY_LIST,
   $FIELD,
@@ -61,5 +104,7 @@ export {
   $RESET,
   FIGURES,
   $SCORE,
-  $NOTE,  
+  $NOTE,
+  $COLOR,
+  SPEED_LIST
 };

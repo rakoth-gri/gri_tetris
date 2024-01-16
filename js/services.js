@@ -12,7 +12,7 @@ export const getCurrCoords = (figure, figureRotation, currFieldPosition) =>
   figure[figureRotation].map((coord) => coord + currFieldPosition);
 
 // Проверка момента остановки текущей фигуры:
-export const isTimeToStop = (
+export const isTimeToStopFigure = (
   currCoords,
   currFieldPosition,
   $cells,
@@ -29,9 +29,8 @@ export const isTimeToStop = (
     reset();
     return true;
   }
-  // Проверяем - дошла ли фигура до Row с элементами, имеющими класс 'bottom'
+  
   if (isBottomRow(currCoords, $cells, row, updateSomeStates)) return true
-
   return false;
 };
 
@@ -45,3 +44,22 @@ export function isBottomRow(currCoords, $cells, row, updateSomeStates) {
   }
   return false
 }
+
+export const updateScore = ($score, score) => {
+    $score.value = score    
+}
+
+export const debounce = (cb, ms) => {
+  let intervalId;
+
+  return (...args) => {
+
+    clearTimeout(intervalId)
+
+    intervalId = setTimeout(() => {
+      cb(...args)
+    }, ms)
+
+
+  }
+} 

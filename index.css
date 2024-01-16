@@ -8,7 +8,7 @@
   --app-success-color: rgb(36, 128, 36);
   --app-white-color: whitesmoke;
   --app-btn-bg: rgb(51, 50, 50);
-  --app-danger-color: rgb(164, 31, 31);
+  --app-danger-color: #a41f1f;
 }
 
 body {
@@ -24,30 +24,22 @@ main {
   text-align: center;
 }
 
+
+h1 {
+  color: var(--app-success-color);
+  font-family: 'Chakra Petch', sans-serif;
+  margin: 1rem 0
+}
+
 label {
   font-family: 'Chakra Petch', sans-serif;
   text-transform: uppercase;
   font-weight: 700;
-  color: var(--app-danger-color);
-  margin-left: 1rem;
-}
-
-.note {
-  color: var(--app-success-color);
-  font-family: 'Chakra Petch', sans-serif;
-}
-
-.note.fail {
-  color: var(--app-danger-color);
-}
-
-p {
-  margin: 1rem 0;
-  text-align: right;
+  color: var(--app-danger-color);  
 }
 
 button,
-input {
+input, select {
   outline: none;
   border: none;
   padding: 0.5rem;
@@ -60,6 +52,12 @@ input {
   text-transform: uppercase;
   font-family: 'Chakra Petch', sans-serif;
   border-radius: 0.25rem;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+}
+
+select {
+  font-size: 0.8em;
 }
 
 button:hover {
@@ -70,7 +68,24 @@ button:disabled {
   opacity: .2;
 }
 
-/* КЛАССЫ */
+/* КЛАССЫ *******************************************/
+
+/* .fail {
+  color: var(--app-danger-color);
+} */
+
+.controls {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  padding: 0 0.5rem;
+  align-items: center;
+}
+
+.controls__color {
+  height: 42px;
+}
 
 .field {
   width: 350px;

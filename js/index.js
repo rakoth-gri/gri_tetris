@@ -3,8 +3,10 @@ import {
   showMess,
   cellsAction,
   getCurrCoords,
-  isTimeToStop,
+  isTimeToStopFigure,
   isBottomRow,
+  updateScore,
+  debounce,
 } from "./services.js";
 import {
   FIGURES,
@@ -13,24 +15,24 @@ import {
   $FIELD,
   $START,
   $PAUSE,
-  $RESET,
   $SCORE,
   $NOTE,
+  $COLOR,
+  SPEED_LIST
 } from "./consts.js";
 
 
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ:
 let currFieldPosition = 4,
-  intervalId, 
-  figureRotation = 0,  
-  figure = FIGURES[randomIndex(FIGURES)],  
-  score = 0,
+  intervalId,
+  figureRotation = 0,
+  figure = FIGURES[randomIndex(FIGURES)],
+  score = 150,
   isPaused = false,
-  delay = 500,
-  isGameOver = true,
+  speed = SPEED_LIST[0].value,
+  isGameOver = true,  
+  figureColor = "var(--app-danger-color)",
   $CELLS;
-
-$SCORE.value = score;
 
 // Отрисовываем поле 1 раз IIFE!
 (() => {
@@ -50,12 +52,31 @@ $SCORE.value = score;
   $CELLS = [...$FIELD.querySelectorAll(".field__cell")];
 })();
 
-const draw = (coords) =>
-  coords.forEach((coord) => $CELLS[coord].classList.add("active"));
+document.querySelector(".controls").insertAdjacentHTML("beforeend", `
+<select class="controls__speed" id="speedChoice">
+  ${
+    SPEED_LIST.map(({text, value}) => `<option value="${value}"> ${text} </option>`).join("")
+  }
+</select>
+`)
 
+// Показываем начальный счет
+updateScore($SCORE, score);
+
+// Устанавливаем цвет заливки фигур по-умолчанию
+$COLOR.setAttribute("value", '#a41f1f');
+
+// Создаем новую функцию из декотора 
+const debouncedColor = debounce((color) => figureColor = color, 500)
+
+// Отрисовка фигуры
+const draw = (coords) =>
+  coords.forEach((coord) => $CELLS[coord].style.backgroundColor = figureColor);
+
+// Стирание фигуры
 function unDraw(coords) {
   if (coords.some((coord) => coord < 0)) return;
-  coords.forEach((coord) => $CELLS[coord].classList.remove("active"));
+  coords.forEach((coord) => $CELLS[coord].removeAttribute("style"));
 }
 
 function prepareForNextStep() {
@@ -69,18 +90,16 @@ function prepareForNextStep() {
 function updateSomeStates() {
   // обновляем некоторые состояния ----
   prepareForNextStep();
-  start(delay);
+  start(speed);
 }
 
-function start(delay) {
+function start(speed) {
   isPaused = false;
-  intervalId = setInterval(() => {    
-    // Удаляем отрисованную фигуру на предыдущем шаге (ряде)
-
+  intervalId = setInterval(() => {
     // Текущие координаты фигуры:
     let currCoords = getCurrCoords(figure, figureRotation, currFieldPosition);
 
-    // Удаляем отрисованную фигуру на предыдущем шаге
+    // Удаляем отрисованную фигуру на предыдущих координатах  
     unDraw(currCoords.map((coord) => coord - ROW));
 
     // Отрисовываем фигуру на текущих координатах:
@@ -88,19 +107,19 @@ function start(delay) {
 
     // Проверка условий остановки движения фигуры
     if (
-      isTimeToStop(
+      isTimeToStopFigure(
         currCoords,
         currFieldPosition,
         $CELLS,
         ROW,
         reset,
-        updateSomeStates,        
+        updateSomeStates
       )
     )
       return;
 
     currFieldPosition += ROW;
-  }, delay);
+  }, speed);
 }
 
 function pause() {
@@ -111,8 +130,6 @@ function pause() {
 
 function reset() {
   prepareForNextStep();
-  score = 0;
-  $SCORE.value = score;  
   isGameOver = true;
   cellsAction($CELLS.slice(0, 200), (cell) => cell.classList.remove("bottom"));
   $START.disabled = false;
@@ -125,9 +142,14 @@ function handler(e) {
   // проверка нажатой клавиши...
   if (KEY_LIST.indexOf(e.key) < 0) return;
 
-  if (isGameOver) return  
+  if (isGameOver) return;
 
-  let currCoords = getCurrCoords(figure, figureRotation, currFieldPosition);
+  // Реверс по координатам, чтобы остаться на ряде, отрисованном ранее в start(speed)
+  let currCoords = getCurrCoords(
+    figure,
+    figureRotation,
+    currFieldPosition - ROW
+  );
 
   if (currCoords.some((coord) => coord % 10 === 0) && e.key === "ArrowLeft")
     return;
@@ -157,11 +179,12 @@ function handler(e) {
   if (figureRotation >= figure.length) figureRotation = 0;
   if (figureRotation < 0) figureRotation = figure.length - 1;
 
-  currCoords = getCurrCoords(figure, figureRotation, currFieldPosition);
+  // Реверс по координатам, чтобы не опуститься сразу на 2 ряда вниз
+  currCoords = getCurrCoords(figure, figureRotation, currFieldPosition - ROW);
 
   draw(currCoords);
 
-  isBottomRow(currCoords, $CELLS, ROW, updateSomeStates)  
+  isBottomRow(currCoords, $CELLS, ROW, updateSomeStates);
 }
 
 // СЛУШАТЕЛИ **************************************************************
@@ -169,14 +192,27 @@ function handler(e) {
 $START.addEventListener("click", function () {
   this.disabled = true;
   isGameOver = false;
+  score = 0;
+  updateScore($SCORE, score);
   isPaused ||
     cellsAction($CELLS.slice(0, 200), (cell) =>
-      cell.classList.remove("active")
+      cell.removeAttribute("style")
     );
-  start(delay);
+  start(speed);
   showMess("GAME STARTED!", $NOTE);
 });
 
 $PAUSE.addEventListener("click", pause);
 
+$COLOR.addEventListener("input", function (e) {
+  debouncedColor(this.value)
+});
+
 document.body.addEventListener("keydown", handler);
+
+
+function speedChoiceHandler() {
+  speed = +this.value 
+}
+
+speedChoice.addEventListener("change", speedChoiceHandler)
