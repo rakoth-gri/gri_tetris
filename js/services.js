@@ -22,14 +22,16 @@ export const isGameOver = (currCoords, $cells, row, reset) => {
   return false
 };
 
-export function isBottomRow(currCoords, $cells, row, prepareForNextStep) {
+export function isBottomRow(currCoords, $cells, row, updateSomeStates) {
   if (
     currCoords.some((coord) => $cells[coord + row].className.includes("bottom"))
   ) {
-    currCoords.forEach((coord) => $cells[coord].classList.add("bottom"));
-    prepareForNextStep();
+    currCoords.forEach((coord) => $cells[coord].classList.add("bottom"));    
+    updateSomeStates();
   }
 }
+
+
 
 export const updateScore = ($score, score) => {
   $score.value = score;

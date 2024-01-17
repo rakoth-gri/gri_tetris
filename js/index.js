@@ -13,7 +13,7 @@ import {
   ROW,
   KEY_LIST,
   $FIELD,
-  $START,  
+  $START,
   $SCORE,
   $NOTE,
   $COLOR,
@@ -26,8 +26,9 @@ let currFieldPosition = 4,
   intervalId,
   figureRotation = 0,
   figure = FIGURES[randomIndex(FIGURES)],
-  score = 0, 
-  speed = SPEED_LIST[0].value,
+  score = 0,
+  level = 0,
+  speed = SPEED_LIST[level].value,
   gameOver = true,
   figureColor = "var(--app-danger-color)",
   $CELLS;
@@ -40,9 +41,9 @@ let currFieldPosition = 4,
       .fill("")
       .map(
         (_, i) => `
-            <div id="${i}" class="${
-          i > 199 ? "field__cell bottom transparent" : "field__cell"
-        }"></div>   
+            <div class="${
+              i > 199 ? "field__cell bottom transparent" : "field__cell"
+            }"></div>   
         `
       )
       .join("")
@@ -51,7 +52,8 @@ let currFieldPosition = 4,
 })();
 
 document.querySelector(".controls").insertAdjacentHTML(
-  "beforeend", `<select class="controls__speed" id="speedChoice">
+  "beforeend",
+  `<select class="controls__speed" id="$SPEED_SELECT">
   ${SPEED_LIST.map(
     ({ text, value }) => `<option value="${value}"> ${text} </option>`
   ).join("")}
@@ -77,30 +79,87 @@ const draw = (coords) =>
 const unDraw = (coords) =>
   coords.forEach((coord) => $CELLS[coord].removeAttribute("style"));
 
-
 function prepareForNextStep() {
   clearInterval(intervalId);
   intervalId = null;
   currFieldPosition = 4;
   // выбор произвольной фигуры -----
   figure = FIGURES[randomIndex(FIGURES)];
-  figureRotation = 0;  
+  figureRotation = 0;
 }
 
 function updateSomeStates() {
   // обновляем некоторые состояния ----
   prepareForNextStep();
+  changeScore();
+
+  // проверки
+  if (score > 0 && score % 100 === 0) {
+    level++;
+
+    if (level === SPEED_LIST.length) {
+      gameOver = true;
+      cellsAction($CELLS.slice(0, 200), (cell) =>
+        cell.classList.remove("bottom")
+      );
+      $CELLS.forEach(($cell, i) => {
+        setTimeout(() => $cell.removeAttribute("style"), i * 10);
+      });
+      showMess("CONGRATULATION, YOU ARE WINNER...", $NOTE);
+      return;
+    }
+    speed = SPEED_LIST[level].value;
+    $SPEED_SELECT.value = speed;
+  }
   start(speed);
 }
 
 function reset() {
   prepareForNextStep();
   gameOver = true;
-  cellsAction($CELLS.slice(0, 200), (cell) => cell.classList.remove("bottom"));  
+  cellsAction($CELLS.slice(0, 200), (cell) => cell.classList.remove("bottom"));
   showMess("YOU LOSS", $NOTE);
   $CELLS.forEach(($cell, i) => {
-    setTimeout(() => $cell.removeAttribute("style"), i * 10)
-  })
+    setTimeout(() => $cell.removeAttribute("style"), i * 10);
+  });
+}
+
+function changeScore() {
+  let spliceCount = 0;
+
+  for (let i = 0; i < 199; i += ROW) {
+    const rowBeingChecked = [
+      i,
+      i + 1,
+      i + 2,
+      i + 3,
+      i + 4,
+      i + 5,
+      i + 6,
+      i + 7,
+      i + 8,
+      i + 9,
+    ].map((i) => $CELLS[i]);
+
+    if (rowBeingChecked.every(($cell) => $cell.className.includes("bottom"))) {
+      score += 10;
+      updateScore($SCORE, score);
+      rowBeingChecked.forEach(($cell) => {
+        $cell.classList.remove("bottom");
+        $cell.removeAttribute("style");
+      });
+      let splicedRow = $CELLS.splice(i, ROW);
+      $CELLS = splicedRow.concat($CELLS);
+      spliceCount++;
+    }
+  }
+
+  if (!spliceCount) return;
+
+  $FIELD.innerHTML = "";
+  $FIELD.append(...$CELLS);
+
+  $CELLS = [...$FIELD.querySelectorAll(".field__cell")];
 }
 
 function start(speed) {
@@ -184,16 +243,16 @@ $START.addEventListener("click", function () {
     clearInterval(intervalId);
     intervalId = null;
   } else {
-    gameOver = false;    
+    gameOver = false;
     start(speed);
     showMess("GAME STARTED!", $NOTE);
-  } 
+  }
 });
 
 // $PAUSE.addEventListener("click", pause);
 
 $RESET.addEventListener("click", () => {
-  reset();  
+  reset();
   showMess("PRESS START TO BEGIN...", $NOTE);
 });
 
@@ -201,7 +260,10 @@ $COLOR.addEventListener("input", function (e) {
   debouncedColor(this.value);
 });
 
-function speedChoiceHandler() { speed = +this.value; }
-speedChoice.addEventListener("change", speedChoiceHandler);
+$SPEED_SELECT.addEventListener("change", function () {
+  console.log(this.value);
+
+  speed = +this.value;
+});
 
 document.body.addEventListener("keydown", handler);
