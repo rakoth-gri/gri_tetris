@@ -12,54 +12,35 @@ export const getCurrCoords = (figure, figureRotation, currFieldPosition) =>
   figure[figureRotation].map((coord) => coord + currFieldPosition);
 
 // Проверка момента остановки текущей фигуры:
-export const isTimeToStopFigure = (
-  currCoords,
-  currFieldPosition,
-  $cells,
-  row,
-  reset,
-  updateSomeStates  
-) => {
+export const isGameOver = (currCoords, $cells, row, reset) => {
   if (
-    currCoords.some((coord) =>
-      $cells[coord + row].className.includes("bottom")
-    ) &&
-    currFieldPosition < row
+    currCoords.some((coord) => $cells[coord + row].className.includes("bottom"))
   ) {
     reset();
     return true;
   }
-  
-  if (isBottomRow(currCoords, $cells, row, updateSomeStates)) return true
-  return false;
+  return false
 };
 
-export function isBottomRow(currCoords, $cells, row, updateSomeStates) {
+export function isBottomRow(currCoords, $cells, row, prepareForNextStep) {
   if (
     currCoords.some((coord) => $cells[coord + row].className.includes("bottom"))
   ) {
     currCoords.forEach((coord) => $cells[coord].classList.add("bottom"));
-    updateSomeStates();
-    return true;
+    prepareForNextStep();
   }
-  return false
 }
 
 export const updateScore = ($score, score) => {
-    $score.value = score    
-}
+  $score.value = score;
+};
 
 export const debounce = (cb, ms) => {
   let intervalId;
-
   return (...args) => {
-
-    clearTimeout(intervalId)
-
+    clearTimeout(intervalId);
     intervalId = setTimeout(() => {
-      cb(...args)
-    }, ms)
-
-
-  }
-} 
+      cb(...args);
+    }, ms);
+  };
+};

@@ -3,7 +3,7 @@ import {
   showMess,
   cellsAction,
   getCurrCoords,
-  isTimeToStopFigure,
+  isGameOver,
   isBottomRow,
   updateScore,
   debounce,
@@ -13,28 +13,26 @@ import {
   ROW,
   KEY_LIST,
   $FIELD,
-  $START,
-  $PAUSE,
+  $START,  
   $SCORE,
   $NOTE,
   $COLOR,
-  SPEED_LIST
+  $RESET,
+  SPEED_LIST,
 } from "./consts.js";
-
 
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ:
 let currFieldPosition = 4,
   intervalId,
   figureRotation = 0,
   figure = FIGURES[randomIndex(FIGURES)],
-  score = 150,
-  isPaused = false,
+  score = 0, 
   speed = SPEED_LIST[0].value,
-  isGameOver = true,  
+  gameOver = true,
   figureColor = "var(--app-danger-color)",
   $CELLS;
 
-// Отрисовываем поле 1 раз IIFE!
+// Отрисовываем поле 1 раз:
 (() => {
   $FIELD.insertAdjacentHTML(
     "beforeend",
@@ -44,7 +42,7 @@ let currFieldPosition = 4,
         (_, i) => `
             <div id="${i}" class="${
           i > 199 ? "field__cell bottom transparent" : "field__cell"
-        }"> </div>   
+        }"></div>   
         `
       )
       .join("")
@@ -52,39 +50,41 @@ let currFieldPosition = 4,
   $CELLS = [...$FIELD.querySelectorAll(".field__cell")];
 })();
 
-document.querySelector(".controls").insertAdjacentHTML("beforeend", `
-<select class="controls__speed" id="speedChoice">
-  ${
-    SPEED_LIST.map(({text, value}) => `<option value="${value}"> ${text} </option>`).join("")
-  }
-</select>
-`)
+document.querySelector(".controls").insertAdjacentHTML(
+  "beforeend", `<select class="controls__speed" id="speedChoice">
+  ${SPEED_LIST.map(
+    ({ text, value }) => `<option value="${value}"> ${text} </option>`
+  ).join("")}
+</select>`
+);
 
 // Показываем начальный счет
 updateScore($SCORE, score);
 
 // Устанавливаем цвет заливки фигур по-умолчанию
-$COLOR.setAttribute("value", '#a41f1f');
+$COLOR.setAttribute("value", "#a41f1f");
 
-// Создаем новую функцию из декотора 
-const debouncedColor = debounce((color) => figureColor = color, 500)
+// Создаем новую функцию из декотора
+const debouncedColor = debounce((color) => (figureColor = color), 500);
 
 // Отрисовка фигуры
 const draw = (coords) =>
-  coords.forEach((coord) => $CELLS[coord].style.backgroundColor = figureColor);
+  coords.forEach(
+    (coord) => ($CELLS[coord].style.backgroundColor = figureColor)
+  );
 
-// Стирание фигуры
-function unDraw(coords) {
-  if (coords.some((coord) => coord < 0)) return;
+// Удаление фигуры
+const unDraw = (coords) =>
   coords.forEach((coord) => $CELLS[coord].removeAttribute("style"));
-}
+
 
 function prepareForNextStep() {
   clearInterval(intervalId);
+  intervalId = null;
   currFieldPosition = 4;
   // выбор произвольной фигуры -----
   figure = FIGURES[randomIndex(FIGURES)];
-  figureRotation = 0;
+  figureRotation = 0;  
 }
 
 function updateSomeStates() {
@@ -93,67 +93,57 @@ function updateSomeStates() {
   start(speed);
 }
 
-function start(speed) {
-  isPaused = false;
-  intervalId = setInterval(() => {
-    // Текущие координаты фигуры:
-    let currCoords = getCurrCoords(figure, figureRotation, currFieldPosition);
+function reset() {
+  prepareForNextStep();
+  gameOver = true;
+  cellsAction($CELLS.slice(0, 200), (cell) => cell.classList.remove("bottom"));  
+  showMess("YOU LOSS", $NOTE);
+  $CELLS.forEach(($cell, i) => {
+    setTimeout(() => $cell.removeAttribute("style"), i * 10)
+  })
+}
 
-    // Удаляем отрисованную фигуру на предыдущих координатах  
-    unDraw(currCoords.map((coord) => coord - ROW));
+function start(speed) {
+  draw(getCurrCoords(figure, figureRotation, currFieldPosition));
+  // Проверка на GameOver --------------
+  if (
+    isGameOver(
+      getCurrCoords(figure, figureRotation, currFieldPosition),
+      $CELLS,
+      ROW,
+      reset
+    )
+  )
+    return;
+
+  intervalId = setInterval(() => {
+    // Удаляем фигуру на текущих координатах
+    unDraw(getCurrCoords(figure, figureRotation, currFieldPosition));
+
+    currFieldPosition += ROW;
+
+    let currCoords = getCurrCoords(figure, figureRotation, currFieldPosition);
 
     // Отрисовываем фигуру на текущих координатах:
     draw(currCoords);
 
-    // Проверка условий остановки движения фигуры
-    if (
-      isTimeToStopFigure(
-        currCoords,
-        currFieldPosition,
-        $CELLS,
-        ROW,
-        reset,
-        updateSomeStates
-      )
-    )
-      return;
-
-    currFieldPosition += ROW;
+    // Проверка условий остановки фигуры
+    isBottomRow(currCoords, $CELLS, ROW, updateSomeStates);
   }, speed);
-}
-
-function pause() {
-  clearInterval(intervalId);
-  isPaused = true;
-  $START.disabled = false;
-}
-
-function reset() {
-  prepareForNextStep();
-  isGameOver = true;
-  cellsAction($CELLS.slice(0, 200), (cell) => cell.classList.remove("bottom"));
-  $START.disabled = false;
-  showMess("YOU LOSS", $NOTE);
 }
 
 // КОНТРОЛЛЕР КЛАВИАТУРЫ *******************************************
 function handler(e) {
   e.preventDefault();
-  // проверка нажатой клавиши...
+  // проверки нажатой клавиши и флага gameOver
   if (KEY_LIST.indexOf(e.key) < 0) return;
+  if (gameOver) return;
 
-  if (isGameOver) return;
+  let currCoords = getCurrCoords(figure, figureRotation, currFieldPosition);
 
-  // Реверс по координатам, чтобы остаться на ряде, отрисованном ранее в start(speed)
-  let currCoords = getCurrCoords(
-    figure,
-    figureRotation,
-    currFieldPosition - ROW
-  );
-
+  // Проверки достижения левой / правой границы поля
   if (currCoords.some((coord) => coord % 10 === 0) && e.key === "ArrowLeft")
     return;
-
   if (
     currCoords.some((coord) => (coord + 1) % 10 === 0) &&
     e.key === "ArrowRight"
@@ -176,11 +166,11 @@ function handler(e) {
       currFieldPosition--;
       break;
   }
+  // Реализация бесконечного вращения....
   if (figureRotation >= figure.length) figureRotation = 0;
   if (figureRotation < 0) figureRotation = figure.length - 1;
 
-  // Реверс по координатам, чтобы не опуститься сразу на 2 ряда вниз
-  currCoords = getCurrCoords(figure, figureRotation, currFieldPosition - ROW);
+  currCoords = getCurrCoords(figure, figureRotation, currFieldPosition);
 
   draw(currCoords);
 
@@ -190,29 +180,28 @@ function handler(e) {
 // СЛУШАТЕЛИ **************************************************************
 
 $START.addEventListener("click", function () {
-  this.disabled = true;
-  isGameOver = false;
-  score = 0;
-  updateScore($SCORE, score);
-  isPaused ||
-    cellsAction($CELLS.slice(0, 200), (cell) =>
-      cell.removeAttribute("style")
-    );
-  start(speed);
-  showMess("GAME STARTED!", $NOTE);
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  } else {
+    gameOver = false;    
+    start(speed);
+    showMess("GAME STARTED!", $NOTE);
+  } 
 });
 
-$PAUSE.addEventListener("click", pause);
+// $PAUSE.addEventListener("click", pause);
+
+$RESET.addEventListener("click", () => {
+  reset();  
+  showMess("PRESS START TO BEGIN...", $NOTE);
+});
 
 $COLOR.addEventListener("input", function (e) {
-  debouncedColor(this.value)
+  debouncedColor(this.value);
 });
 
+function speedChoiceHandler() { speed = +this.value; }
+speedChoice.addEventListener("change", speedChoiceHandler);
+
 document.body.addEventListener("keydown", handler);
-
-
-function speedChoiceHandler() {
-  speed = +this.value 
-}
-
-speedChoice.addEventListener("change", speedChoiceHandler)
