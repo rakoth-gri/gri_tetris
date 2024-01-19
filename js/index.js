@@ -56,13 +56,28 @@ document.querySelector(".controls").insertAdjacentHTML(
   "beforeend",
   `<select class="controls__speed" id="$SPEED_SELECT">
   ${SPEED_LIST.map(
-    ({ text, value }) => `<option value="${value}"> ${text} </option>`
+    ({ text, value }) => `<option value="${value}" disabled> ${text} </option>`
   ).join("")}
 </select>`
 );
 
+// чистим игровое поле
+function clearField(msg) {
+  gameOver = true;
+  cellsAction($CELLS.slice(0, 200), (cell) => cell.classList.remove("bottom"));
+  $CELLS.forEach(($cell, i) => {
+    setTimeout(() => $cell.removeAttribute("style"), i * 10);
+  });
+  showMess(msg, $NOTE);
+}
+
 // Показываем начальный счет
 showScore($SCORE, score);
+
+// function showSpeed(level) {
+//   speed = SPEED_LIST[level].value;
+//   $SPEED_SELECT.value = speed;
+// }
 
 // Устанавливаем цвет заливки фигур по-умолчанию
 $COLOR.setAttribute("value", "#a41f1f");
@@ -89,24 +104,14 @@ function prepareForNextStep() {
   figureRotation = 0;
 }
 
+// обновляем некоторые состояния ----
 function updateSomeStates() {
-  // обновляем некоторые состояния ----
   prepareForNextStep();
   changeScore();
 
-  // проверки
   level = changeLevel(score);
-  console.log(" new Level: " + level);
-
   if (level === SPEED_LIST.length) {
-    gameOver = true;
-    cellsAction($CELLS.slice(0, 200), (cell) =>
-      cell.classList.remove("bottom")
-    );
-    $CELLS.forEach(($cell, i) => {
-      setTimeout(() => $cell.removeAttribute("style"), i * 10);
-    });
-    showMess("CONGRATULATION, YOU ARE WINNER...", $NOTE);
+    clearField("CONGRATULATION, YOU ARE WINNER...")   
     return;
   }
   speed = SPEED_LIST[level].value;
@@ -116,14 +121,11 @@ function updateSomeStates() {
 }
 
 function reset() {
-  prepareForNextStep();
-  gameOver = true;
+  prepareForNextStep();  
   score = 0;
-  cellsAction($CELLS.slice(0, 200), (cell) => cell.classList.remove("bottom"));
-  showMess("YOU LOSS", $NOTE);
-  $CELLS.forEach(($cell, i) => {
-    setTimeout(() => $cell.removeAttribute("style"), i * 10);
-  });
+  showScore($SCORE, score);
+  
+  clearField("YOU LOSS")
 }
 
 function changeScore() {
@@ -263,8 +265,6 @@ $COLOR.addEventListener("input", function (e) {
 });
 
 $SPEED_SELECT.addEventListener("change", function () {
-  console.log(this.value);
-
   speed = +this.value;
 });
 
