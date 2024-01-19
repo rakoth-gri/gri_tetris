@@ -5,8 +5,9 @@ import {
   getCurrCoords,
   isGameOver,
   isBottomRow,
-  updateScore,
+  showScore,
   debounce,
+  changeLevel,
 } from "./services.js";
 import {
   FIGURES,
@@ -61,7 +62,7 @@ document.querySelector(".controls").insertAdjacentHTML(
 );
 
 // Показываем начальный счет
-updateScore($SCORE, score);
+showScore($SCORE, score);
 
 // Устанавливаем цвет заливки фигур по-умолчанию
 $COLOR.setAttribute("value", "#a41f1f");
@@ -94,29 +95,30 @@ function updateSomeStates() {
   changeScore();
 
   // проверки
-  if (score > 0 && score % 100 === 0) {
-    level++;
+  level = changeLevel(score);
+  console.log(" new Level: " + level);
 
-    if (level === SPEED_LIST.length) {
-      gameOver = true;
-      cellsAction($CELLS.slice(0, 200), (cell) =>
-        cell.classList.remove("bottom")
-      );
-      $CELLS.forEach(($cell, i) => {
-        setTimeout(() => $cell.removeAttribute("style"), i * 10);
-      });
-      showMess("CONGRATULATION, YOU ARE WINNER...", $NOTE);
-      return;
-    }
-    speed = SPEED_LIST[level].value;
-    $SPEED_SELECT.value = speed;
+  if (level === SPEED_LIST.length) {
+    gameOver = true;
+    cellsAction($CELLS.slice(0, 200), (cell) =>
+      cell.classList.remove("bottom")
+    );
+    $CELLS.forEach(($cell, i) => {
+      setTimeout(() => $cell.removeAttribute("style"), i * 10);
+    });
+    showMess("CONGRATULATION, YOU ARE WINNER...", $NOTE);
+    return;
   }
+  speed = SPEED_LIST[level].value;
+  $SPEED_SELECT.value = speed;
+
   start(speed);
 }
 
 function reset() {
   prepareForNextStep();
   gameOver = true;
+  score = 0;
   cellsAction($CELLS.slice(0, 200), (cell) => cell.classList.remove("bottom"));
   showMess("YOU LOSS", $NOTE);
   $CELLS.forEach(($cell, i) => {
@@ -143,7 +145,7 @@ function changeScore() {
 
     if (rowBeingChecked.every(($cell) => $cell.className.includes("bottom"))) {
       score += 10;
-      updateScore($SCORE, score);
+      showScore($SCORE, score);
       rowBeingChecked.forEach(($cell) => {
         $cell.classList.remove("bottom");
         $cell.removeAttribute("style");
