@@ -12,22 +12,16 @@ export const getCurrCoords = (figure, figureRotation, currFieldPosition) =>
   figure[figureRotation].map((coord) => coord + currFieldPosition);
 
 // Проверка момента остановки текущей фигуры:
-export const isGameOver = (currCoords, $cells, row, reset) => {
-  if (
-    currCoords.some((coord) => $cells[coord + row].className.includes("bottom"))
-  ) {
-    reset();
-    return true;
-  }
-  return false;
+export const isGameOver = (currCoords, $cells, row) => {
+  if (currCoords.some((coord) => $cells[coord + row].className.includes("bottom"))) return 1;   
 };
 
-export function isBottomRow(currCoords, $cells, row, updateSomeStates) {
+export function isBottomRow(currCoords, $cells, row, prepareForNextFigure) {
   if (
     currCoords.some((coord) => $cells[coord + row].className.includes("bottom"))
   ) {
     currCoords.forEach((coord) => $cells[coord].classList.add("bottom"));
-    updateSomeStates();
+    prepareForNextFigure();
   }
 }
 

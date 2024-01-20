@@ -4,6 +4,7 @@ const $FIELD = document.querySelector(".field"),
   $SCORE = document.querySelector(".controls__score"),
   $COLOR = document.querySelector(".controls__color"),
   $NOTE = document.querySelector(".note"),
+  $CONTROLS = document.querySelector(".controls"),
   // длина ряда в клетках!
   ROW = 10,
   KEY_LIST = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"],
@@ -104,5 +105,6 @@ export {
   $SCORE,
   $NOTE,
   $COLOR,
-  SPEED_LIST
+  SPEED_LIST,
+  $CONTROLS
 };

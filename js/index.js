@@ -20,21 +20,22 @@ import {
   $COLOR,
   $RESET,
   SPEED_LIST,
+  $CONTROLS,
 } from "./consts.js";
 
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ:
-let currFieldPosition = 4,
-  intervalId,
-  figureRotation = 0,
-  figure = FIGURES[randomIndex(FIGURES)],
-  score = 0,
-  level = 0,
-  speed = SPEED_LIST[level].value,
-  gameOver = true,
-  figureColor = "var(--app-danger-color)",
-  $CELLS;
+let currFieldPos_g = 4,
+  intervalId_g,
+  figRot_g = 0,
+  fig_g = FIGURES[randomIndex(FIGURES)],
+  score_g = 0,
+  level_g = 0,
+  speed_g = SPEED_LIST[level_g].value,
+  gameOver_g = true,
+  figCol_g = "var(--app-danger-color)",
+  $CELLS_g;
 
-// Отрисовываем поле 1 раз:
+// НАЧАЛЬНАЯ ОТРИСОВКА ПОЛЯ ----:
 (() => {
   $FIELD.insertAdjacentHTML(
     "beforeend",
@@ -49,85 +50,92 @@ let currFieldPosition = 4,
       )
       .join("")
   );
-  $CELLS = [...$FIELD.querySelectorAll(".field__cell")];
+  $CELLS_g = [...$FIELD.querySelectorAll(".field__cell")];
 })();
 
-document.querySelector(".controls").insertAdjacentHTML(
+// ПАНЕЛЬ ОТОБРАЖЕНИЯ УРОВНЯ ------
+$CONTROLS.insertAdjacentHTML(
   "beforeend",
-  `<select class="controls__speed" id="$SPEED_SELECT">
+  `<select class="controls__speed" id="$LEVEL_PANEL">
   ${SPEED_LIST.map(
     ({ text, value }) => `<option value="${value}" disabled> ${text} </option>`
   ).join("")}
 </select>`
 );
 
-// чистим игровое поле
+// ОСНОВНЫЕ ФУНКЦИИ ----------------------------------
+// ***************************************************
+
+// ОЧИСТКА ИГРОВОГО ПОЛЯ
 function clearField(msg) {
-  gameOver = true;
-  cellsAction($CELLS.slice(0, 200), (cell) => cell.classList.remove("bottom"));
-  $CELLS.forEach(($cell, i) => {
+  gameOver_g = true;
+  cellsAction($CELLS_g.slice(0, 200), (cell) =>
+    cell.classList.remove("bottom")
+  );
+  $CELLS_g.forEach(($cell, i) => {
     setTimeout(() => $cell.removeAttribute("style"), i * 10);
   });
   showMess(msg, $NOTE);
 }
 
-// Показываем начальный счет
-showScore($SCORE, score);
+// ОТОБРАЖЕНИЕ СЧЕТА
+showScore($SCORE, score_g);
 
-// function showSpeed(level) {
-//   speed = SPEED_LIST[level].value;
-//   $SPEED_SELECT.value = speed;
-// }
-
-// Устанавливаем цвет заливки фигур по-умолчанию
+// УСТАНОВКА ФОНА ФИГУР
 $COLOR.setAttribute("value", "#a41f1f");
 
-// Создаем новую функцию из декотора
-const debouncedColor = debounce((color) => (figureColor = color), 500);
+// ОПТИМИЗАЦИЯ
+const debouncedColor = debounce((color) => (figCol_g = color), 500);
 
-// Отрисовка фигуры
+// ОТРИСОВКА ФИГУРЫ
 const draw = (coords) =>
-  coords.forEach(
-    (coord) => ($CELLS[coord].style.backgroundColor = figureColor)
-  );
+  coords.forEach((coord) => ($CELLS_g[coord].style.backgroundColor = figCol_g));
 
-// Удаление фигуры
+// УДАЛЕНИЕ ФИГУРЫ
 const unDraw = (coords) =>
-  coords.forEach((coord) => $CELLS[coord].removeAttribute("style"));
+  coords.forEach((coord) => $CELLS_g[coord].removeAttribute("style"));
 
-function prepareForNextStep() {
-  clearInterval(intervalId);
-  intervalId = null;
-  currFieldPosition = 4;
-  // выбор произвольной фигуры -----
-  figure = FIGURES[randomIndex(FIGURES)];
-  figureRotation = 0;
+// ОБНОВЛЕНИЕ ГЛОБАЛЬНЫХ СОСТОЯНИЙ  -----
+function updateGlobalVars() {
+  clearInterval(intervalId_g);
+  intervalId_g = null;
+  currFieldPos_g = 4;
+  // произвольная фигура -----
+  fig_g = FIGURES[randomIndex(FIGURES)];
+  figRot_g = 0;
 }
 
-// обновляем некоторые состояния ----
-function updateSomeStates() {
-  prepareForNextStep();
-  changeScore();
+// ОБНУЛЕНИ УРОВНЯ ИГРЫ
 
-  level = changeLevel(score);
-  if (level === SPEED_LIST.length) {
-    clearField("CONGRATULATION, YOU ARE WINNER...")   
+function zeroedLevel() {
+  speed_g = SPEED_LIST[level_g].value;
+  $LEVEL_PANEL.value = speed_g;
+}
+
+// ПОДГОТОВКА СОСТОЯНИЙ К ПОЯВЛЕНИЮ НОВОЙ ФИГУРЫ ----
+function prepareForNextFigure() {
+  updateGlobalVars();
+  changeScore();
+  level_g = changeLevel(score_g);
+
+  if (level_g === SPEED_LIST.length) {
+    reset("CONGRATULATION, YOU ARE WINNER...");
     return;
   }
-  speed = SPEED_LIST[level].value;
-  $SPEED_SELECT.value = speed;
-
-  start(speed);
+  zeroedLevel();
+  start(speed_g);
 }
 
-function reset() {
-  prepareForNextStep();  
-  score = 0;
-  showScore($SCORE, score);
-  
-  clearField("YOU LOSS")
+// СБРОС ТЕКУЩЕЙ ИГРЫ
+function reset(msg) {
+  updateGlobalVars();
+  (level_g = 0), (score_g = 0);
+  zeroedLevel();
+  showScore($SCORE, score_g);
+  clearField(msg);
 }
 
+// АЛГОРИТМ ИЗМЕНЕНИЯ СЧЕТА И УДАЛЕНИЯ РЯДОВ ИГРОВОГО ПОЛЯ
 function changeScore() {
   let spliceCount = 0;
 
@@ -143,17 +151,17 @@ function changeScore() {
       i + 7,
       i + 8,
       i + 9,
-    ].map((i) => $CELLS[i]);
+    ].map((i) => $CELLS_g[i]);
 
     if (rowBeingChecked.every(($cell) => $cell.className.includes("bottom"))) {
-      score += 10;
-      showScore($SCORE, score);
+      score_g += 10;
+      showScore($SCORE, score_g);
       rowBeingChecked.forEach(($cell) => {
         $cell.classList.remove("bottom");
         $cell.removeAttribute("style");
       });
-      let splicedRow = $CELLS.splice(i, ROW);
-      $CELLS = splicedRow.concat($CELLS);
+      let splicedRow = $CELLS_g.splice(i, ROW);
+      $CELLS_g = splicedRow.concat($CELLS_g);
       spliceCount++;
     }
   }
@@ -161,48 +169,49 @@ function changeScore() {
   if (!spliceCount) return;
 
   $FIELD.innerHTML = "";
-  $FIELD.append(...$CELLS);
+  $FIELD.append(...$CELLS_g);
 
-  $CELLS = [...$FIELD.querySelectorAll(".field__cell")];
+  $CELLS_g = [...$FIELD.querySelectorAll(".field__cell")];
 }
 
+// ЗАПУСК ГЛАВНОЙ ФУНКЦИИ ДВИЖЕНИЯ ФИГУР
 function start(speed) {
-  draw(getCurrCoords(figure, figureRotation, currFieldPosition));
+  draw(getCurrCoords(fig_g, figRot_g, currFieldPos_g));
   // Проверка на GameOver --------------
   if (
     isGameOver(
-      getCurrCoords(figure, figureRotation, currFieldPosition),
-      $CELLS,
+      getCurrCoords(fig_g, figRot_g, currFieldPos_g),
+      $CELLS_g,
       ROW,
       reset
     )
-  )
+  ) {
+    reset("SORRY, YOU'VE LOST...");
     return;
+  }
 
-  intervalId = setInterval(() => {
-    // Удаляем фигуру на текущих координатах
-    unDraw(getCurrCoords(figure, figureRotation, currFieldPosition));
+  intervalId_g = setInterval(() => {
+    unDraw(getCurrCoords(fig_g, figRot_g, currFieldPos_g));
 
-    currFieldPosition += ROW;
+    currFieldPos_g += ROW;
 
-    let currCoords = getCurrCoords(figure, figureRotation, currFieldPosition);
+    let currCoords = getCurrCoords(fig_g, figRot_g, currFieldPos_g);
 
-    // Отрисовываем фигуру на текущих координатах:
     draw(currCoords);
 
     // Проверка условий остановки фигуры
-    isBottomRow(currCoords, $CELLS, ROW, updateSomeStates);
+    isBottomRow(currCoords, $CELLS_g, ROW, prepareForNextFigure);
   }, speed);
 }
 
-// КОНТРОЛЛЕР КЛАВИАТУРЫ *******************************************
-function handler(e) {
+// КОНТРОЛЛЕР КЛАВИАТУРЫ -------------------------
+function keyboardController(e) {
   e.preventDefault();
-  // проверки нажатой клавиши и флага gameOver
+  // проверки
   if (KEY_LIST.indexOf(e.key) < 0) return;
-  if (gameOver) return;
+  if (gameOver_g) return;
 
-  let currCoords = getCurrCoords(figure, figureRotation, currFieldPosition);
+  let currCoords = getCurrCoords(fig_g, figRot_g, currFieldPos_g);
 
   // Проверки достижения левой / правой границы поля
   if (currCoords.some((coord) => coord % 10 === 0) && e.key === "ArrowLeft")
@@ -217,55 +226,50 @@ function handler(e) {
 
   switch (e.key) {
     case "ArrowUp":
-      figureRotation++;
+      figRot_g++;
       break;
     case "ArrowDown":
-      currFieldPosition += ROW;
+      currFieldPos_g += ROW;
       break;
     case "ArrowRight":
-      currFieldPosition++;
+      currFieldPos_g++;
       break;
     default:
-      currFieldPosition--;
+      currFieldPos_g--;
       break;
   }
-  // Реализация бесконечного вращения....
-  if (figureRotation >= figure.length) figureRotation = 0;
-  if (figureRotation < 0) figureRotation = figure.length - 1;
+  // проверки вращения фигур...
+  if (figRot_g >= fig_g.length) figRot_g = 0;
+  if (figRot_g < 0) figRot_g = fig_g.length - 1;
 
-  currCoords = getCurrCoords(figure, figureRotation, currFieldPosition);
+  currCoords = getCurrCoords(fig_g, figRot_g, currFieldPos_g);
 
   draw(currCoords);
 
-  isBottomRow(currCoords, $CELLS, ROW, updateSomeStates);
+  isBottomRow(currCoords, $CELLS_g, ROW, prepareForNextFigure);
 }
 
 // СЛУШАТЕЛИ **************************************************************
 
 $START.addEventListener("click", function () {
-  if (intervalId) {
-    clearInterval(intervalId);
-    intervalId = null;
+  if (intervalId_g) {
+    clearInterval(intervalId_g);
+    intervalId_g = null;
   } else {
-    gameOver = false;
-    start(speed);
+    gameOver_g = false;
+    start(speed_g);
     showMess("GAME STARTED!", $NOTE);
   }
 });
 
-// $PAUSE.addEventListener("click", pause);
-
-$RESET.addEventListener("click", () => {
-  reset();
-  showMess("PRESS START TO BEGIN...", $NOTE);
-});
+$RESET.addEventListener("click", () => reset("PRESS START TO BEGIN..."));
 
 $COLOR.addEventListener("input", function (e) {
   debouncedColor(this.value);
 });
 
-$SPEED_SELECT.addEventListener("change", function () {
-  speed = +this.value;
-});
+document.body.addEventListener("keydown", keyboardController);
 
-document.body.addEventListener("keydown", handler);
+// $LEVEL_PANEL.addEventListener("change", function () {
+//   speed_g = +this.value;
+// });
