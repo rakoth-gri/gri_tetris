@@ -8,7 +8,7 @@ import {
   showScore,
   debounce,
   changeLevel,
-} from "./services.js";
+} from "./services.min.js";
 import {
   FIGURES,
   ROW,
@@ -21,7 +21,7 @@ import {
   $RESET,
   SPEED_LIST,
   $CONTROLS,
-} from "./consts.js";
+} from "./consts.min.js";
 
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ:
 let currFieldPos_g = 4,

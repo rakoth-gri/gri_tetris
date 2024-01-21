@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> GRI_TETRIS</title>
+    <!-- GOOGLE TYPOGRATHY -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch&family=Roboto&display=swap"
+      rel="stylesheet"
+    />
+    <!-- game styles -->
+    <link rel="stylesheet" href="./dist/css/index.min.css" />
+    <script src="./dist/js/index.min.js" type="module" defer></script>
+  </head>
+  <body>
+    <main>
+      <h1 class="note"> PRESS START </h1>
+      <section class="controls">        
+          <button class="controls__start">start</button>          
+          <button class="controls__reset"> reset </button>
+          <label for="score">score: </label>
+          <input class="controls__score" id="score" />
+          <input class="controls__color" id="color" type="color"/>        
+      </section>
+      <div>
+        <section class="field"></section>
+      </div>
+    </main>
+  </body>
+</html>
